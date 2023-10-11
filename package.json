@@ -1,0 +1,12 @@
+{
+  "name": "city_population_service",
+  "version": "1.0.0",
+  "description": "Practice Node.js service for Trazi",
+  "main": "index.js",
+  "scripts": {
+	"start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "John Vayianos",
+  "license": "ISC"
+}
