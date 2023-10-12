@@ -1,6 +1,7 @@
 const fs = require('fs');
-const csv = require('csv-parser');
+const readline = require('readline');
 const mysql = require('mysql2');
+const http = require('http');
 
 // Database connection configuration
 const connection = mysql.createConnection({
@@ -20,39 +21,55 @@ connection.query('CREATE DATABASE IF NOT EXISTS mydatabase', (err) => {
 });
 
 function createTable() {
-  // SQL query to create the table
+  // SQL query to create the 'population' table
   const createTableQuery = `
     CREATE TABLE IF NOT EXISTS population (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      city VARCHAR(255),
+      cities VARCHAR(255),
       state VARCHAR(255),
-      population INT
+      count INT
     )
   `;
-  
+
   connection.query(createTableQuery, (err) => {
     if (err) throw err;
     importCSVData();
   });
 }
 
+	//Lets get the data from csv into the table
 function importCSVData() {
-  // Read and parse the CSV file
-  fs.createReadStream('city_populations.csv')
-    .pipe(csv())
-    .on('data', (row) => {
-      // Insert each row into the database
+  const rl = readline.createInterface({
+    input: fs.createReadStream('city_populations.csv'),
+    crlfDelay: Infinity,
+  });
+
+// When the CSV is read properly start doing some work
+  rl.on('line', (line) => {
+    const [cities, state, count] = line.split(','); // Split by comma
+    const countValue = parseInt(count, 10); // Make this a INT
+
+	//Final data check for paranoia
+    if (isValidCity(cities) && isValidState(state) && !isNaN(countValue)) {
+      // Insert each row into the 'population' table
       connection.query(
-        'INSERT INTO population (city, state, population) VALUES (?, ?, ?)',
-        [row.city, row.state, row.population],
+        'INSERT INTO population (cities, state, count) VALUES (?, ?, ?)',
+        [cities, state, countValue],
         (error) => {
           if (error) throw error;
         }
       );
-    })
-    .on('end', () => {
-      console.log('Data imported successfully.');
-      // Close the database connection
-      connection.end();
-    });
+    }
+  });
+}
+
+// Having problems with the INT
+function isValidCity(city) {
+  // Check if the value contains alphabetic characters (a-z or A-Z)
+  return /[a-zA-Z]/.test(city);
+}
+
+function isValidState(state) {
+  // Check if the value contains alphabetic characters (a-z or A-Z)
+  return /[a-zA-Z]/.test(state);
 }
