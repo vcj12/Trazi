@@ -24,7 +24,7 @@ db.connect((err) => {
   console.log('Connected to the database as id ' + db.threadId);
 });
 
-// Define a route to get the population count for a specific city and state
+// Define a route to GETD the population count for a specific city and state
 app.get('/api/population/state/:state/city/:city', (req, res) => {
   const state = req.params.state;
   const city = req.params.city;
@@ -35,11 +35,12 @@ app.get('/api/population/state/:state/city/:city', (req, res) => {
     if (error) {
       res.status(500).json({ error: 'Database error' });
     } else {
-      if (results.length > 0) {
-        const count = results[0].count;
-        res.json({ city, state, count });
+      if (results.length > 0) { //If everything is well lets respond with the population
+        const population = results[0].count;
+        res.json({ population });
       } else {
-        res.json({ city, state, count: 0 }); // No data found
+        // No data found, so send a 400 error response
+        res.status(400).json({ error: 'Error 400: State/City Combo not found' });
       }
     }
   });
