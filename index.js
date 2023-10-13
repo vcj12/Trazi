@@ -81,21 +81,12 @@ const app = express();
 // Middleware for parsing JSON requests
 app.use(bodyParser.json());
 
-// Database connection configuration
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'vcj12',
-  password: 'Trazi01!',
-  database: 'mydatabase',
-  port: 3306,
-});
-
-db.connect((err) => {
+connection.connect((err) => {
   if (err) {
     console.error('Error connecting to the database: ' + err.stack);
     process.exit(1);
   }
-  console.log('Connected to the database as id ' + db.threadId);
+  console.log('Connected to the database as id ' + connection.threadId);
 });
 
 // Define a route to GETD the population count for a specific city and state
@@ -105,7 +96,7 @@ app.get('/api/population/state/:state/city/:city', (req, res) => {
 
   const query = 'SELECT count FROM population WHERE state = ? AND cities = ?';
 
-  db.query(query, [state, city], (error, results, fields) => {
+  connection.query(query, [state, city], (error, results, fields) => {
     if (error) {
       res.status(500).json({ error: 'Database error' });
     } else {
@@ -129,14 +120,14 @@ app.put('/api/population/state/:state/city/:city', (req, res) => {
 
   // Check if the city/state combination exists
   const selectQuery = 'SELECT * FROM population WHERE state = ? AND cities = ?';
-  db.query(selectQuery, [state, city], (error, results, fields) => {
+  connection.query(selectQuery, [state, city], (error, results, fields) => {
     if (error) {
       res.status(500).json({ error: 'Database error' });
     } else {
       if (results.length > 0) {
         // City/state combination exists, so update the population
         const updateQuery = 'UPDATE population SET count = ? WHERE state = ? AND cities = ?';
-        db.query(updateQuery, [population, state, city], (updateError) => {
+        connection.query(updateQuery, [population, state, city], (updateError) => {
           if (updateError) {
             res.status(400).json({ error: 'Error 400: Data could not be updated' });
           } else {
@@ -146,7 +137,7 @@ app.put('/api/population/state/:state/city/:city', (req, res) => {
       } else {
         // City/state combination does not exist, so create new data
         const insertQuery = 'INSERT INTO population (state, cities, count) VALUES (?, ?, ?)';
-        db.query(insertQuery, [state, city, population], (insertError) => {
+        connection.query(insertQuery, [state, city, population], (insertError) => {
           if (insertError) {
             res.status(400).json({ error: 'Error 400: Data could not be added' });
           } else {
