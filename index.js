@@ -120,6 +120,47 @@ app.get('/api/population/state/:state/city/:city', (req, res) => {
   });
 });
 
+
+// Define a route for updating or creating population data
+app.put('/api/population/state/:state/city/:city', (req, res) => {
+  const state = req.params.state.toLowerCase(); // Make state case-insensitive
+  const city = req.params.city.toLowerCase(); // Make city case-insensitive
+  const population = req.body; // Body should be plain text with the new population
+
+  // Check if the city/state combination exists
+  const selectQuery = 'SELECT * FROM population WHERE state = ? AND cities = ?';
+  db.query(selectQuery, [state, city], (error, results, fields) => {
+    if (error) {
+      res.status(500).json({ error: 'Database error' });
+    } else {
+      if (results.length > 0) {
+        // City/state combination exists, so update the population
+        const updateQuery = 'UPDATE population SET count = ? WHERE state = ? AND cities = ?';
+        db.query(updateQuery, [population, state, city], (updateError) => {
+          if (updateError) {
+            res.status(400).json({ error: 'Error 400: Data could not be updated' });
+          } else {
+            res.status(200).json({ message: 'Data updated successfully' });
+          }
+        });
+      } else {
+        // City/state combination does not exist, so create new data
+        const insertQuery = 'INSERT INTO population (state, cities, count) VALUES (?, ?, ?)';
+        db.query(insertQuery, [state, city, population], (insertError) => {
+          if (insertError) {
+            res.status(400).json({ error: 'Error 400: Data could not be added' });
+          } else {
+            res.status(201).json({ message: 'Data created successfully' });
+          }
+        });
+      }
+    }
+  });
+});
+
+
+
+
 // Start the Express.js server
 const port = 5555;
 app.listen(port, () => {
