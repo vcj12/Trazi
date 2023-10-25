@@ -25,13 +25,6 @@ npm start
 ```
 
 
-
-
-## Documentation
-
-[Documentation](https://linktodocumentation)
-
-
 ## Optimizations
 
 
